@@ -1,7 +1,6 @@
 import { createServer } from "node:http";
 import { readFile, readdir } from "node:fs/promises";
 import sanitizeFilename from "sanitize-filename";
-import { useState } from "react";
 
 createServer(async (req, res) => {
   try {
@@ -84,7 +83,6 @@ function Router({ url }) {
 }
 
 function BlogLayout({ children }) {
-  const author = "Jae Doe";
   return (
     <html>
       <head>
@@ -98,7 +96,6 @@ function BlogLayout({ children }) {
           <hr />
         </nav>
         <main>{children}</main>
-        <Footer author={author} />
       </body>
     </html>
   );
@@ -147,18 +144,5 @@ async function Post({ slug }) {
       </h2>
       <article>{content}</article>
     </section>
-  );
-}
-
-function Footer({ author }) {
-  return (
-    <footer>
-      <hr />
-      <p>
-        <i>
-          (c) {author} {new Date().getFullYear()}
-        </i>
-      </p>
-    </footer>
   );
 }

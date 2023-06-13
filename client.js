@@ -1,28 +1,14 @@
 import { hydrateRoot } from "react-dom/client";
 
-const root = hydrateRoot(document, getInitialClientJSX());
-let currentPathname = window.location.pathname;
-
-async function navigate(pathname) {
-  currentPathname = pathname;
-  const clientJSX = await fetchClientJSX(pathname);
-
-  if (pathname === currentPathname) {
-    root.render(clientJSX);
-  }
-}
-
-function getInitialClientJSX() {
-  const clientJSX = JSON.parse(window.__INITIAL_CLIENT_JSX_STRING__, parseJSX);
-  console.log("window.__INITIAL_CLIENT_JSX_STRING__", clientJSX);
-  return clientJSX;
-}
+const root = hydrateRoot(
+  document,
+  await fetchClientJSX(window.location.pathname)
+);
 
 async function fetchClientJSX(pathname) {
   const response = await fetch(pathname + "?jsx");
   const clientJSXString = await response.text();
-  const clientJSX = JSON.parse(clientJSXString, parseJSX);
-  return clientJSX;
+  return JSON.parse(clientJSXString, parseJSX);
 }
 
 function parseJSX(key, value) {
@@ -32,6 +18,16 @@ function parseJSX(key, value) {
     return value.slice(1);
   } else {
     return value;
+  }
+}
+
+let currentPathname = window.location.pathname;
+async function navigate(pathname) {
+  currentPathname = pathname;
+  const clientJSX = await fetchClientJSX(pathname);
+
+  if (pathname === currentPathname) {
+    root.render(clientJSX);
   }
 }
 

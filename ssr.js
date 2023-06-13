@@ -1,12 +1,13 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
-import { renderToString } from "react-dom/server";
 
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
     if (url.pathname === "/client.js") {
-      await sendScript(res, "./client.js");
+      const content = await readFile("./client.js", "utf8");
+      res.setHeader("Content-Type", "text/javascript");
+      res.end(content);
     }
     const response = await fetch("http://127.0.0.1:8081" + url.pathname);
     if (!response.ok) {
@@ -20,13 +21,7 @@ createServer(async (req, res) => {
       res.setHeader("Content-Type", "application/json");
       res.end(clientJSXString);
     } else {
-      const clientJSX = JSON.parse(clientJSXString, parseJSX);
-      let html = renderToString(clientJSX);
-
-      html += `<script>window.__INITIAL_CLIENT_JSX_STRING__ = `;
-      html += JSON.stringify(clientJSXString).replace(/</g, "\\u003c");
-      html += `</script>`;
-      html += `
+      let html = `
         <script type="importmap">
           {
             "imports": {
@@ -35,7 +30,6 @@ createServer(async (req, res) => {
             }
           }
         </script>
-        
         <script type="module" src="/client.js"></script>
       `;
       res.setHeader("Content-Type", "text/html");
@@ -47,19 +41,3 @@ createServer(async (req, res) => {
     res.end();
   }
 }).listen(8080);
-
-async function sendScript(res, filename) {
-  const content = await readFile(filename, "utf8");
-  res.setHeader("Content-Type", "text/javascript");
-  res.end(content);
-}
-
-function parseJSX(key, value) {
-  if (value === "$RE") {
-    return Symbol.for("react.element");
-  } else if (typeof value === "string" && value.startsWith("$$")) {
-    return value.slice(1);
-  } else {
-    return value;
-  }
-}
